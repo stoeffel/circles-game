@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Animator
 import Browser
 import Browser.Navigation as Navigation
 import Color exposing (Color)
@@ -18,7 +19,11 @@ import Time
 import Url exposing (Url)
 
 
-type Model
+type alias Model =
+    Animator.Timeline State
+
+
+type State
     = NotStarted
     | Circle (Maybe Command) Level
     | Change Command Level
@@ -55,7 +60,7 @@ type alias Flags =
 
 init : D.Value -> Url -> Navigation.Key -> ( Model, Cmd Msg )
 init _ _ _ =
-    ( NotStarted, Cmd.none )
+    ( Animator.init NotStarted, Cmd.none )
 
 
 newCommand : Level -> Maybe Command -> Cmd Msg
@@ -106,7 +111,20 @@ view model =
     { title = "Circles Game"
     , body =
         [ E.layout
-            [ Background.color backgroundColor
+            [ Background.color <|
+                E.fromRgb <|
+                    Color.toRgba <|
+                        Animator.color model
+                            (\state ->
+                                Color.fromRgba <|
+                                    E.toRgb <|
+                                        case state of
+                                            Change command _ ->
+                                                commandToColor command
+
+                                            _ ->
+                                                backgroundColor
+                            )
             , Font.color foregroundColor
             , Font.size 60
             , Font.family
@@ -116,7 +134,7 @@ view model =
             , E.height E.fill
             , E.width E.fill
             ]
-            (case model of
+            (case Animator.current model of
                 NotStarted ->
                     Input.button
                         [ E.centerX
@@ -132,7 +150,7 @@ view model =
                         { onPress = Just Start, label = E.text "Start" }
 
                 Change command _ ->
-                    gameLayout (commandToColor command) <|
+                    gameLayout <|
                         E.el
                             [ E.centerX, E.centerY ]
                             (E.text (commandToString command))
@@ -140,7 +158,7 @@ view model =
                 Circle previousCommand level ->
                     case previousCommand of
                         Just command ->
-                            gameLayout backgroundColor <|
+                            gameLayout <|
                                 E.column []
                                     [ E.el
                                         [ E.centerX, E.centerY ]
@@ -151,7 +169,7 @@ view model =
                                     ]
 
                         Nothing ->
-                            gameLayout backgroundColor <|
+                            gameLayout <|
                                 E.el
                                     [ E.centerX, E.centerY ]
                                     (E.text (levelToString level ++ " level"))
@@ -160,12 +178,11 @@ view model =
     }
 
 
-gameLayout color content =
+gameLayout content =
     E.column
         [ E.height E.fill
         , E.width E.fill
         , E.padding 20
-        , Background.color color
         ]
         [ E.row
             [ Font.glow backgroundColor 4
@@ -237,6 +254,7 @@ levelToString level =
 
 type Msg
     = NoOp
+    | Tick Time.Posix
     | Start
     | Stop
     | NewCommand Command
@@ -252,16 +270,16 @@ update msg model =
             ( model, Cmd.none )
 
         Start ->
-            ( Circle Nothing Upper
+            ( Animator.go Animator.veryQuickly (Circle Nothing Upper) model
             , Random.generate Sleep (Random.int 4 8)
             )
 
         Stop ->
-            ( NotStarted, Cmd.none )
+            ( Animator.init NotStarted, Cmd.none )
 
         NextCommand ->
             ( model
-            , case model of
+            , case Animator.current model of
                 Change previousCommand level ->
                     newCommand level (Just previousCommand)
 
@@ -275,7 +293,7 @@ update msg model =
         NewCommand command ->
             let
                 newLevel =
-                    case model of
+                    case Animator.current model of
                         NotStarted ->
                             Upper
 
@@ -285,18 +303,23 @@ update msg model =
                         Circle _ level ->
                             levelFromCommand level command
             in
-            ( Change command newLevel
+            ( Animator.go Animator.veryQuickly (Change command newLevel) model
             , Task.perform (\_ -> ShowCircle command newLevel) (Process.sleep 2000)
             )
 
         ShowCircle command level ->
-            ( Circle (Just command) level
+            ( Animator.go Animator.verySlowly (Circle (Just command) level) model
             , Random.generate Sleep (Random.int 4 8)
             )
 
         Sleep time ->
             ( model
             , Task.perform (\_ -> NextCommand) (Process.sleep (toFloat time * 1000))
+            )
+
+        Tick newTime ->
+            ( Animator.update newTime animator model
+            , Cmd.none
             )
 
 
@@ -321,7 +344,14 @@ levelFromCommand level command =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Animator.toSubscription Tick model animator
+
+
+animator =
+    Animator.animator
+        |> Animator.watching
+            identity
+            (\timeline _ -> timeline)
 
 
 onUrlRequest : Browser.UrlRequest -> Msg
