@@ -65,8 +65,8 @@ init _ _ _ =
     ( Animator.init NotStarted, Cmd.none )
 
 
-newCommand : Level -> Maybe Command -> Cmd Msg
-newCommand level maybePreviousCommand =
+newCommand : Level -> Cmd Msg
+newCommand level =
     let
         possibleCommands =
             case level of
@@ -80,7 +80,7 @@ newCommand level maybePreviousCommand =
                     lowerCommands
     in
     Random.generate NewCommand <|
-        case List.filter (\c -> Just c /= maybePreviousCommand) possibleCommands of
+        case possibleCommands of
             [] ->
                 allCommandsGenerator
 
@@ -95,7 +95,7 @@ allCommandsGenerator =
 
 upperCommands : List Command
 upperCommands =
-    [ Down, Down, ChangePlane, ChangeDirection ]
+    [ Down, ChangePlane, ChangeDirection ]
 
 
 middleCommands : List Command
@@ -105,7 +105,7 @@ middleCommands =
 
 lowerCommands : List Command
 lowerCommands =
-    [ Up, Up, ChangePlane, ChangeDirection ]
+    [ Up, ChangePlane, ChangeDirection ]
 
 
 view : Model -> Browser.Document Msg
@@ -331,13 +331,13 @@ update msg model =
             ( model
             , case Animator.current model of
                 Change previousCommand level ->
-                    newCommand level (Just previousCommand)
+                    newCommand level
 
                 NotStarted ->
                     Cmd.none
 
                 Circle previousCommand level ->
-                    newCommand level previousCommand
+                    newCommand level
             )
 
         NewCommand command ->
