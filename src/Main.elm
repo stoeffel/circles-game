@@ -138,7 +138,7 @@ view model =
                                 Animator.at 1
                     )
             , Font.color foregroundColor
-            , Font.size 20
+            , Font.size 30
             , Font.family
                 [ Font.typeface "Patrick Hand"
                 , Font.sansSerif
@@ -163,7 +163,7 @@ view model =
 
                 Change command _ ->
                     gameLayout
-                        [ icon <| commandToIcon command
+                        [ icon Big <| commandToIcon command
                         , E.text (commandToString command)
                         ]
 
@@ -171,13 +171,13 @@ view model =
                     case previousCommand of
                         Just command ->
                             gameLayout
-                                [ icon <| commandToIcon command
+                                [ icon Big <| commandToIcon command
                                 , E.text (levelToString level ++ " level")
                                 ]
 
                         Nothing ->
                             gameLayout
-                                [ icon "far fa-circle"
+                                [ icon Big "far fa-circle"
                                 , E.text (levelToString level ++ " level")
                                 ]
             )
@@ -185,10 +185,21 @@ view model =
     }
 
 
-icon icon_ =
+type IconSize
+    = Big
+    | Small
+
+
+icon size icon_ =
     E.html <|
         Html.i
-            [ Attr.style "font-size" "4em"
+            [ Attr.style "font-size" <|
+                case size of
+                    Big ->
+                        "4em"
+
+                    Small ->
+                        "0.5em"
             , Attr.style "text-align" "center"
             , Attr.class icon_
             ]
@@ -201,35 +212,30 @@ gameLayout content =
         , E.width E.fill
         , E.padding 20
         ]
-        (List.indexedMap
-            (\index c ->
-                E.row
-                    [ Font.glow backgroundColor 4
-                    , if index == 0 then
-                        E.height E.fill
+        (E.row [ E.centerX ]
+            [ Input.button
+                [ E.centerX
+                , E.centerY
+                , E.padding 20
+                , E.focused []
+                , Border.rounded 8
+                ]
+                { onPress = Just Stop, label = icon Small "fas fa-times" }
+            ]
+            :: List.indexedMap
+                (\index c ->
+                    E.row
+                        [ Font.glow backgroundColor 4
+                        , if index == 0 then
+                            E.height E.fill
 
-                      else
-                        E.height (E.maximum 80 E.fill)
-                    , E.centerX
-                    ]
-                    [ c ]
-            )
-            content
-            ++ [ E.row [ E.centerX ]
-                    [ Input.button
-                        [ E.centerX
-                        , E.centerY
-                        , E.padding 10
-                        , Background.color foregroundColor
-                        , Font.color backgroundColor
-                        , Border.color foregroundColor
-                        , Border.width 1
-                        , Border.shadow { blur = 5, color = foregroundColor, offset = ( 0, 0 ), size = 1 }
-                        , Border.rounded 8
+                          else
+                            E.height (E.maximum 80 E.fill)
+                        , E.centerX
                         ]
-                        { onPress = Just Stop, label = E.text "Stop" }
-                    ]
-               ]
+                        [ c ]
+                )
+                content
         )
 
 
@@ -319,7 +325,7 @@ update msg model =
             )
 
         Stop ->
-            ( Animator.init NotStarted, Cmd.none )
+            ( Animator.init NotStarted, Navigation.reload )
 
         NextCommand ->
             ( model
