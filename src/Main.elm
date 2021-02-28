@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Animator
+import Animator.Inline
 import Browser
 import Browser.Navigation as Navigation
 import Color exposing (Color)
@@ -126,6 +127,16 @@ view model =
                                             _ ->
                                                 backgroundColor
                             )
+            , E.htmlAttribute <|
+                Animator.Inline.opacity model
+                    (\state ->
+                        case state of
+                            Circle (Just command) _ ->
+                                Animator.at 0.7
+
+                            _ ->
+                                Animator.at 1
+                    )
             , Font.color foregroundColor
             , Font.size 20
             , Font.family
@@ -159,7 +170,7 @@ view model =
                 Circle previousCommand level ->
                     case previousCommand of
                         Just command ->
-                            gameLayout <|
+                            gameLayout
                                 [ icon <| commandToIcon command
                                 , E.text (levelToString level ++ " level")
                                 ]
@@ -198,7 +209,7 @@ gameLayout content =
                         E.height E.fill
 
                       else
-                        E.height (E.px 30)
+                        E.height (E.maximum 80 E.fill)
                     , E.centerX
                     ]
                     [ c ]
