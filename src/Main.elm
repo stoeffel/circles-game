@@ -10,6 +10,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Keyed as EK
+import Html
 import Html.Attributes as Attr
 import Json.Decode as D
 import Process
@@ -126,7 +127,7 @@ view model =
                                                 backgroundColor
                             )
             , Font.color foregroundColor
-            , Font.size 60
+            , Font.size 20
             , Font.family
                 [ Font.typeface "Patrick Hand"
                 , Font.sansSerif
@@ -150,32 +151,37 @@ view model =
                         { onPress = Just Start, label = E.text "Start" }
 
                 Change command _ ->
-                    gameLayout <|
-                        E.el
-                            [ E.centerX, E.centerY ]
-                            (E.text (commandToString command))
+                    gameLayout
+                        [ icon <| commandToIcon command
+                        , E.text (commandToString command)
+                        ]
 
                 Circle previousCommand level ->
                     case previousCommand of
                         Just command ->
                             gameLayout <|
-                                E.column []
-                                    [ E.el
-                                        [ E.centerX, E.centerY ]
-                                        (E.text (commandToString command))
-                                    , E.el
-                                        [ E.centerX, E.centerY ]
-                                        (E.text (levelToString level ++ " level"))
-                                    ]
+                                [ icon <| commandToIcon command
+                                , E.text (levelToString level ++ " level")
+                                ]
 
                         Nothing ->
-                            gameLayout <|
-                                E.el
-                                    [ E.centerX, E.centerY ]
-                                    (E.text (levelToString level ++ " level"))
+                            gameLayout
+                                [ icon "far fa-circle"
+                                , E.text (levelToString level ++ " level")
+                                ]
             )
         ]
     }
+
+
+icon icon_ =
+    E.html <|
+        Html.i
+            [ Attr.style "font-size" "4em"
+            , Attr.style "text-align" "center"
+            , Attr.class icon_
+            ]
+            []
 
 
 gameLayout content =
@@ -184,27 +190,36 @@ gameLayout content =
         , E.width E.fill
         , E.padding 20
         ]
-        [ E.row
-            [ Font.glow backgroundColor 4
-            , E.height E.fill
-            , E.centerX
-            ]
-            [ content ]
-        , E.row [ E.centerX ]
-            [ Input.button
-                [ E.centerX
-                , E.centerY
-                , E.padding 10
-                , Background.color foregroundColor
-                , Font.color backgroundColor
-                , Border.color foregroundColor
-                , Border.width 1
-                , Border.shadow { blur = 5, color = foregroundColor, offset = ( 0, 0 ), size = 1 }
-                , Border.rounded 8
-                ]
-                { onPress = Just Stop, label = E.text "Stop" }
-            ]
-        ]
+        (List.indexedMap
+            (\index c ->
+                E.row
+                    [ Font.glow backgroundColor 4
+                    , if index == 0 then
+                        E.height E.fill
+
+                      else
+                        E.height (E.px 30)
+                    , E.centerX
+                    ]
+                    [ c ]
+            )
+            content
+            ++ [ E.row [ E.centerX ]
+                    [ Input.button
+                        [ E.centerX
+                        , E.centerY
+                        , E.padding 10
+                        , Background.color foregroundColor
+                        , Font.color backgroundColor
+                        , Border.color foregroundColor
+                        , Border.width 1
+                        , Border.shadow { blur = 5, color = foregroundColor, offset = ( 0, 0 ), size = 1 }
+                        , Border.rounded 8
+                        ]
+                        { onPress = Just Stop, label = E.text "Stop" }
+                    ]
+               ]
+        )
 
 
 commandToColor : Command -> E.Color
@@ -221,6 +236,24 @@ commandToColor command =
 
         ChangeDirection ->
             E.rgb255 231 111 81
+
+
+commandToIcon : Command -> String
+commandToIcon command =
+    "fas "
+        ++ (case command of
+                Up ->
+                    "fa-arrow-up"
+
+                Down ->
+                    "fa-arrow-down"
+
+                ChangePlane ->
+                    "fa-layer-group"
+
+                ChangeDirection ->
+                    "fa-directions"
+           )
 
 
 commandToString : Command -> String
