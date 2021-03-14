@@ -68,7 +68,7 @@ init _ _ _ =
 newCommand : Level -> Cmd Msg
 newCommand level =
     let
-        possibleCommands =
+        ( first, rest ) =
             case level of
                 Upper ->
                     upperCommands
@@ -80,32 +80,22 @@ newCommand level =
                     lowerCommands
     in
     Random.generate NewCommand <|
-        case possibleCommands of
-            [] ->
-                allCommandsGenerator
-
-            first :: rest ->
-                Random.uniform first rest
+        Random.weighted first rest
 
 
-allCommandsGenerator : Random.Generator Command
-allCommandsGenerator =
-    Random.uniform Up [ Down, ChangePlane, ChangeDirection ]
-
-
-upperCommands : List Command
+upperCommands : ( ( Float, Command ), List ( Float, Command ) )
 upperCommands =
-    [ Down, ChangePlane, ChangeDirection ]
+    ( ( 0.5, Down ), [ ( 0.25, ChangePlane ), ( 0.25, ChangeDirection ) ] )
 
 
-middleCommands : List Command
+middleCommands : ( ( Float, Command ), List ( Float, Command ) )
 middleCommands =
-    [ Up, Down, ChangePlane, ChangeDirection ]
+    ( ( 0.35, Up ), [ ( 0.35, Down ), ( 0.15, ChangePlane ), ( 0.15, ChangeDirection ) ] )
 
 
-lowerCommands : List Command
+lowerCommands : ( ( Float, Command ), List ( Float, Command ) )
 lowerCommands =
-    [ Up, ChangePlane, ChangeDirection ]
+    ( ( 0.5, Up ), [ ( 0.25, ChangePlane ), ( 0.25, ChangeDirection ) ] )
 
 
 view : Model -> Browser.Document Msg
@@ -321,7 +311,7 @@ update msg model =
 
         Start ->
             ( Animator.go Animator.veryQuickly (Circle Nothing Upper) model
-            , Random.generate Sleep (Random.int 4 8)
+            , Random.generate Sleep (Random.int 3 7)
             )
 
         Stop ->
@@ -359,7 +349,7 @@ update msg model =
 
         ShowCircle command level ->
             ( Animator.go Animator.verySlowly (Circle (Just command) level) model
-            , Random.generate Sleep (Random.int 4 8)
+            , Random.generate Sleep (Random.int 3 7)
             )
 
         Sleep time ->
