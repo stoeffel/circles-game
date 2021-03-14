@@ -26,7 +26,14 @@ if(/iPad/.test(navigator.platform) && /Safari/i.test(navigator.userAgent)){
 })();
 
 function main () {
-  Elm.Main.init();
+  const app = Elm.Main.init();
+
+  app.ports.speak.subscribe(function(message) {
+      if ("speechSynthesis" in window) {
+        var msg = new SpeechSynthesisUtterance(message);
+        window.speechSynthesis.speak(msg)
+      }
+  })
 }
 
 // HMR setup. For more info see: https://parceljs.org/hmr.html

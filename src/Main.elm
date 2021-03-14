@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Animator
 import Animator.Inline
@@ -54,6 +54,9 @@ main =
         , onUrlRequest = onUrlRequest
         , onUrlChange = onUrlChange
         }
+
+
+port speak : String -> Cmd msg
 
 
 type alias Flags =
@@ -321,7 +324,7 @@ update msg model =
             ( model
             , case Animator.current model of
                 Change previousCommand level ->
-                    newCommand level
+                    Cmd.none
 
                 NotStarted ->
                     Cmd.none
@@ -344,7 +347,10 @@ update msg model =
                             levelFromCommand level command
             in
             ( Animator.go Animator.veryQuickly (Change command newLevel) model
-            , Task.perform (\_ -> ShowCircle command newLevel) (Process.sleep 2000)
+            , Cmd.batch
+                [ Task.perform (\_ -> ShowCircle command newLevel) (Process.sleep 2000)
+                , speak (commandToString command)
+                ]
             )
 
         ShowCircle command level ->
