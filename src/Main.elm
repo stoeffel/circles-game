@@ -88,17 +88,17 @@ newCommand level =
 
 upperCommands : ( ( Float, Command ), List ( Float, Command ) )
 upperCommands =
-    ( ( 0.4, Down ), [ ( 0.3, ChangePlane ), ( 0.3, ChangeDirection ) ] )
+    ( ( 0.4, Down ), [ ( 0.32, ChangePlane ), ( 0.28, ChangeDirection ) ] )
 
 
 middleCommands : ( ( Float, Command ), List ( Float, Command ) )
 middleCommands =
-    ( ( 0.3, Up ), [ ( 0.3, Down ), ( 0.2, ChangePlane ), ( 0.2, ChangeDirection ) ] )
+    ( ( 0.28, Up ), [ ( 0.28, Down ), ( 0.23, ChangePlane ), ( 0.21, ChangeDirection ) ] )
 
 
 lowerCommands : ( ( Float, Command ), List ( Float, Command ) )
 lowerCommands =
-    ( ( 0.4, Up ), [ ( 0.3, ChangePlane ), ( 0.3, ChangeDirection ) ] )
+    ( ( 0.4, Up ), [ ( 0.32, ChangePlane ), ( 0.28, ChangeDirection ) ] )
 
 
 view : Model -> Browser.Document Msg
