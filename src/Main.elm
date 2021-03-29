@@ -93,7 +93,7 @@ upperCommands =
 
 middleCommands : ( ( Float, Command ), List ( Float, Command ) )
 middleCommands =
-    ( ( 0.28, Up ), [ ( 0.28, Down ), ( 0.23, ChangePlane ), ( 0.21, ChangeDirection ) ] )
+    ( ( 0.2, Up ), [ ( 0.2, Down ), ( 0.32, ChangePlane ), ( 0.27, ChangeDirection ) ] )
 
 
 lowerCommands : ( ( Float, Command ), List ( Float, Command ) )
